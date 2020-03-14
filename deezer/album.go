@@ -1,5 +1,6 @@
 package deezer
 
+// Album Deezer Album response
 type Album struct {
 	ID          int    `json:"id"`
 	Title       string `json:"title"`

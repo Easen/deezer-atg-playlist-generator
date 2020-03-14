@@ -1,7 +1,6 @@
 package atg
 
 import (
-	"fmt"
 	"html"
 	"io/ioutil"
 	"log"
@@ -35,7 +34,6 @@ func getAjaxNonce() (string, error) {
 
 // GetAllATGArtists Get All ATG Artists
 func GetAllATGArtists() ([]string, error) {
-	fmt.Println("Fetching all of the ATG artists")
 	artists := []string{}
 	pagenum := 1
 	limit := 80
@@ -44,7 +42,7 @@ func GetAllATGArtists() ([]string, error) {
 		return nil, ajaxNonceErr
 	}
 	for {
-		log.Println("Making call to url: %s, ajax_nonce: %s, pagenum: %d, limit: %d", atgAjaxURL, ajaxNonce, pagenum, limit)
+		log.Printf("Making call to url: %s, ajax_nonce: %s, pagenum: %d, limit: %d", atgAjaxURL, ajaxNonce, pagenum, limit)
 		resp, err := http.PostForm(atgAjaxURL,
 			url.Values{"action": {"noisa_artists_filter"},
 				"ajax_nonce":       {ajaxNonce},
@@ -63,7 +61,7 @@ func GetAllATGArtists() ([]string, error) {
 
 		re := regexp.MustCompile(`<h2 class="grid-title">([^<]+)<\/h2>`)
 		matches := re.FindAllStringSubmatch(string(body), -1)
-		log.Println("Found %d artists", len(matches))
+		log.Printf("Found %d artists", len(matches))
 		if len(matches) == 0 {
 			break
 		}

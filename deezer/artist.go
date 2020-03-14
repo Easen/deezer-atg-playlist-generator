@@ -4,17 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
-
-	"github.com/davecgh/go-spew/spew"
+	"strings"
 )
 
 // Artist Deezer Artist response
 type Artist struct {
-	ID            string      `json:"id"`
+	ID            int32       `json:"id"`
 	Name          string      `json:"name"`
 	Link          string      `json:"link"`
 	Picture       string      `json:"picture"`
@@ -50,14 +48,14 @@ func (a Artist) GetTopTracks(limit int) ([]Track, error) {
 
 	requestURL := parsedURL.String()
 
-	log.Printf("Get Tracks URL: %s\n", requestURL)
+	// log.Printf("Get Tracks URL: %s\n", requestURL)
 	println(requestURL)
 
 	res, httpErr := http.Get(requestURL)
 	if httpErr != nil {
 		return tracks, httpErr
 	}
-	log.Printf("Invoked %s return status code: %d\n", requestURL, res.StatusCode)
+	// log.Printf("Invoked %s return status code: %d\n", requestURL, res.StatusCode)
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return tracks, fmt.Errorf("Status code was %d", res.StatusCode)
@@ -68,18 +66,68 @@ func (a Artist) GetTopTracks(limit int) ([]Track, error) {
 		return tracks, bodyErr
 	}
 
-	log.Printf("Received body: %s\n", string(body))
+	// log.Printf("Received body: %s\n", string(body))
 
 	var result artistTracklist
 	if err := json.Unmarshal(body, &result); err != nil {
 		return tracks, err
 	}
 
-	log.Printf("Unmarshalled into %s\n", spew.Sdump(result))
+	// log.Printf("Unmarshalled into %s\n", spew.Sdump(result))
 
 	if len(result.Data) <= limit {
 		return result.Data, nil
 	}
 
 	return result.Data[0:limit], nil
+}
+
+type artistSearchResult struct {
+	Data    []Artist `json:"data"`
+	NextURL string   `json:"next,omitempty"`
+}
+
+var (
+	deezerSearchURL = "https://api.deezer.com/search/artist"
+)
+
+// SearchForArtist return the matched Artist
+func SearchForArtist(artistName string) (*Artist, error) {
+	artistName = strings.ToLower(artistName)
+	var result *Artist
+	url := fmt.Sprintf("%s?q=%s", deezerSearchURL, url.QueryEscape(artistName))
+	res, httpErr := http.Get(url)
+	if httpErr != nil {
+		return result, httpErr
+	}
+	// log.Printf("Invoked %s return status code: %d\n", url, res.StatusCode)
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return result, fmt.Errorf("Status code was %d", res.StatusCode)
+	}
+
+	body, bodyErr := ioutil.ReadAll(res.Body)
+	if bodyErr != nil {
+		return result, bodyErr
+	}
+
+	// log.Printf("Received body: %s\n", string(body))
+
+	searchResult := artistSearchResult{}
+	if err := json.Unmarshal(body, &searchResult); err != nil {
+		return result, err
+	}
+
+	// log.Printf("Unmarshalled into %s\n", spew.Sdump(searchResult))
+
+	if len(searchResult.Data) == 1 {
+		return &searchResult.Data[0], nil
+	}
+	for _, artist := range searchResult.Data {
+		if strings.ToLower(artist.Name) == artistName {
+			return &artist, nil
+		}
+	}
+
+	return result, nil
 }
