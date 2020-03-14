@@ -1,5 +1,12 @@
 package deezer
 
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+)
+
 // Track - A Deezer Track resource
 type Track struct {
 	ID                    int    `json:"id"`
@@ -38,4 +45,43 @@ type Track struct {
 		Type        string `json:"type"`
 	} `json:"album"`
 	Type string `json:"type"`
+}
+
+var (
+	deezerTopTracks = "https://api.deezer.com/artist/%d/top?limit=%d"
+)
+
+// GetTopTracksForArtistID Get the top tracks for an ArtistID
+func GetTopTracksForArtistID(artistID int, limit int) ([]Track, error) {
+	var tracks []Track
+	requestURL := fmt.Sprintf(deezerTopTracks, artistID, limit)
+	res, httpErr := http.Get(requestURL)
+	if httpErr != nil {
+		return tracks, httpErr
+	}
+	// log.Printf("Invoked %s return status code: %d\n", requestURL, res.StatusCode)
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return tracks, fmt.Errorf("Status code was %d", res.StatusCode)
+	}
+
+	body, bodyErr := ioutil.ReadAll(res.Body)
+	if bodyErr != nil {
+		return tracks, bodyErr
+	}
+
+	// log.Printf("Received body: %s\n", string(body))
+
+	var result artistTracklist
+	if err := json.Unmarshal(body, &result); err != nil {
+		return tracks, err
+	}
+
+	// log.Printf("Unmarshalled into %s\n", spew.Sdump(result))
+
+	if len(result.Data) <= limit {
+		return result.Data, nil
+	}
+
+	return result.Data[0:limit], nil
 }
