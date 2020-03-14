@@ -59,7 +59,6 @@ func GetTopTracksForArtistID(artistID int, limit int) ([]Track, error) {
 	if httpErr != nil {
 		return tracks, httpErr
 	}
-	// log.Printf("Invoked %s return status code: %d\n", requestURL, res.StatusCode)
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return tracks, fmt.Errorf("Status code was %d", res.StatusCode)
@@ -70,14 +69,10 @@ func GetTopTracksForArtistID(artistID int, limit int) ([]Track, error) {
 		return tracks, bodyErr
 	}
 
-	// log.Printf("Received body: %s\n", string(body))
-
 	var result artistTracklist
 	if err := json.Unmarshal(body, &result); err != nil {
 		return tracks, err
 	}
-
-	// log.Printf("Unmarshalled into %s\n", spew.Sdump(result))
 
 	if len(result.Data) <= limit {
 		return result.Data, nil

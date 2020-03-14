@@ -53,7 +53,6 @@ func SearchForArtistViaAPI(artistName string) (*Artist, error) {
 	if httpErr != nil {
 		return result, httpErr
 	}
-	// log.Printf("Invoked %s return status code: %d\n", url, res.StatusCode)
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return result, fmt.Errorf("Status code was %d", res.StatusCode)
@@ -64,14 +63,10 @@ func SearchForArtistViaAPI(artistName string) (*Artist, error) {
 		return result, bodyErr
 	}
 
-	// log.Printf("Received body: %s\n", string(body))
-
 	searchResult := artistSearchResult{}
 	if err := json.Unmarshal(body, &searchResult); err != nil {
 		return result, err
 	}
-
-	// log.Printf("Unmarshalled into %s\n", spew.Sdump(searchResult))
 
 	if len(searchResult.Data) == 1 {
 		return &searchResult.Data[0], nil
@@ -101,7 +96,6 @@ func SearchForArtistIDViaWeb(artistName string) (int, error) {
 	if httpErr != nil {
 		return result, httpErr
 	}
-	// log.Printf("Invoked %s return status code: %d\n", url, res.StatusCode)
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return result, fmt.Errorf("Status code was %d", res.StatusCode)
@@ -118,14 +112,10 @@ func SearchForArtistIDViaWeb(artistName string) (int, error) {
 		return result, nil
 	}
 
-	// log.Printf("Received body: %s\n", string(body))
-
 	searchResult := deezerWebSearch{}
 	if err := json.Unmarshal([]byte(matches[1]), &searchResult); err != nil {
 		return result, err
 	}
-
-	// log.Printf("Unmarshalled into %s\n", spew.Sdump(searchResult))
 
 	if len(searchResult.TOPRESULT) > 0 {
 		return strconv.Atoi(searchResult.TOPRESULT[0].ARTID)
