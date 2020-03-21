@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/easen/deezer-atg-playlist-generator/atg"
-	"github.com/easen/deezer-atg-playlist-generator/deezer"
+	"github.com/easen/godeezer"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -32,7 +32,7 @@ func main() {
 	}
 	tracksIDs := getTopTrackIDsForArtists(artists)
 	playlistID, _ := strconv.Atoi(deezerPlaylistID)
-	err = deezer.UpdatePlaylistTracks(deezerAccessToken, playlistID, tracksIDs)
+	err = godeezer.UpdatePlaylistTracks(deezerAccessToken, playlistID, tracksIDs)
 	if err != nil {
 		panic(err)
 	}
@@ -56,14 +56,14 @@ func getTopTrackIDsForArtists(artists []string) []int {
 
 func getTopTrackIDsForArtist(artist string) []int {
 	var trackIDs []int
-	deezerArtist, err := deezer.SearchForArtistViaAPI(artist)
+	deezerArtist, err := godeezer.SearchForArtistViaAPI(artist)
 	if err != nil {
 		log.Panicf("Error occured while trying to find the artist \"%s\" via API", artist)
 		return trackIDs
 	}
 	var artistID int
 	if deezerArtist == nil {
-		webArtistID, err := deezer.SearchForArtistIDViaWeb(artist)
+		webArtistID, err := godeezer.SearchForArtistIDViaWeb(artist)
 		if err != nil {
 			log.Panicf("Error occured while trying to find the artist \"%s\" via Web", artist)
 			return trackIDs
@@ -77,7 +77,7 @@ func getTopTrackIDsForArtist(artist string) []int {
 		return trackIDs
 	}
 
-	topTracks, err := deezer.GetTopTracksForArtistID(artistID, getTopTrackLimit())
+	topTracks, err := godeezer.GetTopTracksForArtistID(artistID, getTopTrackLimit())
 	if err != nil {
 		log.Panicf("Error occured while trying to find the top tracks for artist \"%s\"", artist)
 		return trackIDs
